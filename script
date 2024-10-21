@@ -1,73 +1,71 @@
--- Creating the ScreenGui and Buttons
-local screenGui = Instance.new("ScreenGui")
-local autoCollectButton = Instance.new("TextButton")
-local autoFarmButton = Instance.new("TextButton")
+-- Variables
+local farming = false
+local collecting = false
 
--- Parent the ScreenGui to the player's PlayerGui
-screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+-- Create UI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
--- Set properties for Auto Collect Button
-autoCollectButton.Text = "Auto Collect"
-autoCollectButton.Size = UDim2.new(0, 200, 0, 50)
-autoCollectButton.Position = UDim2.new(0, 100, 0, 100)
-autoCollectButton.Parent = screenGui
+-- Create Auto Farm Button
+local AutoFarmButton = Instance.new("TextButton")
+AutoFarmButton.Size = UDim2.new(0, 200, 0, 50)
+AutoFarmButton.Position = UDim2.new(0.5, -100, 0.1, 0)
+AutoFarmButton.Text = "Toggle Auto Farm"
+AutoFarmButton.Parent = ScreenGui
 
--- Set properties for Auto Farm Button
-autoFarmButton.Text = "Auto Farm"
-autoFarmButton.Size = UDim2.new(0, 200, 0, 50)
-autoFarmButton.Position = UDim2.new(0, 100, 0, 200)
-autoFarmButton.Parent = screenGui
+-- Create Auto Collect Button
+local AutoCollectButton = Instance.new("TextButton")
+AutoCollectButton.Size = UDim2.new(0, 200, 0, 50)
+AutoCollectButton.Position = UDim2.new(0.5, -100, 0.2, 0)
+AutoCollectButton.Text = "Toggle Auto Collect"
+AutoCollectButton.Parent = ScreenGui
 
--- Variables to control the toggling of Auto Collect and Auto Farm
-local autoCollecting = false
-local autoFarming = false
-
--- Function to collect collectibles
-function autoCollect()
-    while autoCollecting do
-        for _, collectible in pairs(workspace:GetChildren()) do
-            if collectible:IsA("Part") and collectible:FindFirstChild("CollectibleTag") then
-                -- Simulate player moving to collectible and collecting it
-                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = collectible.CFrame
-                wait(0.5) -- Simulate time for collection
-            end
-        end
-        wait(1) -- Wait a second before checking for more collectibles
-    end
-end
-
--- Function to automatically click chests or clickable objects
-function autoFarm()
-    while autoFarming do
+-- Auto Farm Logic
+local function autoFarm()
+    while farming do
         for _, object in pairs(workspace:GetChildren()) do
-            if object:IsA("Model") and object:FindFirstChild("ClickableTag") then
-                -- Simulate clicking on the object
-                fireclickdetector(object.ClickDetector)
-                wait(0.5) -- Delay between clicks
+            -- Check if object is a breakable item (coin piles, chests, crates)
+            if object:FindFirstChild("BreakableTag") then
+                -- Simulate breaking the object
+                object:Break() -- You might need to adjust this to match the actual break method
             end
         end
-        wait(1) -- Wait a second before checking for more objects
+        wait(0.5) -- Adjust the delay to control how often you break objects
     end
 end
 
--- Auto Collect Button Functionality
-autoCollectButton.MouseButton1Click:Connect(function()
-    autoCollecting = not autoCollecting
-    autoCollectButton.Text = autoCollecting and "Stop Auto Collect" or "Auto Collect"
-    
-    if autoCollecting then
-        -- Run autoCollect concurrently without blocking the main thread
-        spawn(autoCollect)
+-- Auto Collect Logic
+local function autoCollect()
+    while collecting do
+        for _, collectible in pairs(workspace:GetChildren()) do
+            -- Check if collectible is a collectible item (coins, gems, etc.)
+            if collectible:FindFirstChild("CollectibleTag") then
+                -- Simulate collecting the item
+                collectible:Collect() -- Adjust this to match the actual collect method
+            end
+        end
+        wait(0.5) -- Adjust the delay to control how often you collect items
+    end
+end
+
+-- Toggle Auto Farm
+AutoFarmButton.MouseButton1Click:Connect(function()
+    farming = not farming
+    if farming then
+        print("Auto Farm Enabled")
+        autoFarm()
+    else
+        print("Auto Farm Disabled")
     end
 end)
 
--- Auto Farm Button Functionality
-autoFarmButton.MouseButton1Click:Connect(function()
-    autoFarming = not autoFarming
-    autoFarmButton.Text = autoFarming and "Stop Auto Farm" or "Auto Farm"
-    
-    if autoFarming then
-        -- Run autoFarm concurrently without blocking the main thread
-        spawn(autoFarm)
+-- Toggle Auto Collect
+AutoCollectButton.MouseButton1Click:Connect(function()
+    collecting = not collecting
+    if collecting then
+        print("Auto Collect Enabled")
+        autoCollect()
+    else
+        print("Auto Collect Disabled")
     end
 end)
